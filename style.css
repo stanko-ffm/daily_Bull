@@ -1,9 +1,13 @@
 :root {
-    --bg-color: #0d1117;
+    --bg-color: #00358E;
+    /* User requested "black" replacement */
     --bull-gold: #ffd700;
-    --candle-green: #00ff00;
+    --candle-green: #2d9d00;
+    /* User requested green */
     --candle-red: #ff3333;
     --text-color: #e6edf3;
+    --highlight-yellow: #fed210;
+    /* User requested yellow */
     --neon-shadow: 0 0 10px;
 }
 
@@ -17,6 +21,9 @@
 
 body {
     background-color: var(--bg-color);
+    /* Updated gradient to match new blue */
+    background-image:
+        radial-gradient(circle at 50% 50%, #0045aa 0%, #00358E 100%);
     color: var(--text-color);
     font-family: 'Share Tech Mono', monospace;
     overflow: hidden;
@@ -32,9 +39,14 @@ body {
     width: 100%;
     height: 100%;
     max-width: 600px;
-    /* Mobile-first constraint for desktop */
-    background: #161b22;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    background: var(--bg-color);
+    /* Subtle grid */
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 50px 50px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
 }
 
 canvas {
@@ -50,79 +62,95 @@ canvas {
     width: 100%;
     height: 100%;
     pointer-events: none;
-    /* Let taps pass through to canvas */
 }
 
 .screen {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 400px;
+    padding: 2rem;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background: rgba(13, 17, 23, 0.85);
-    backdrop-filter: blur(5px);
-    transition: opacity 0.3s ease;
+
+    background: rgba(0, 53, 142, 0.85);
+    /* Matches new bg */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+
+    transition: opacity 0.3s ease, transform 0.3s ease;
     pointer-events: auto;
-    /* Enable buttons */
 }
 
 .hidden {
     opacity: 0;
     pointer-events: none;
+    transform: translate(-50%, -40%);
 }
 
 .active {
     opacity: 1;
     pointer-events: auto;
+    transform: translate(-50%, -50%);
 }
 
 .title {
-    font-size: 3rem;
-    color: var(--bull-gold);
-    text-shadow: var(--neon-shadow) var(--bull-gold);
+    font-size: 2.5rem;
+    color: var(--highlight-yellow);
+    text-shadow: 0 0 15px rgba(254, 210, 16, 0.5);
     margin-bottom: 0.5rem;
     text-align: center;
+    letter-spacing: -1px;
 }
 
 .subtitle {
-    font-size: 1.2rem;
+    font-size: 1rem;
     color: var(--candle-green);
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
+    opacity: 0.9;
 }
 
 .instructions {
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
     text-align: center;
-    line-height: 1.6;
-    color: #8b949e;
+    line-height: 1.8;
+    color: #e6edf3;
+    font-size: 0.9rem;
 }
 
 .glowing-btn {
-    background: transparent;
-    border: 2px solid var(--candle-green);
+    background: rgba(45, 157, 0, 0.2);
+    border: 1px solid var(--candle-green);
     color: var(--candle-green);
-    padding: 1rem 2rem;
-    font-family: inherit;
-    font-size: 1.5rem;
+    padding: 0.8rem 2rem;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.2rem;
     cursor: pointer;
-    box-shadow: var(--neon-shadow) var(--candle-green);
-    transition: all 0.2s;
+    box-shadow: 0 0 10px rgba(45, 157, 0, 0.2);
+    transition: all 0.3s;
     text-transform: uppercase;
+    border-radius: 4px;
+    width: 100%;
+    margin-bottom: 0.5rem;
 }
 
 .glowing-btn:hover {
     background: var(--candle-green);
-    color: var(--bg-color);
+    color: #fff;
+    box-shadow: 0 0 20px rgba(45, 157, 0, 0.6);
 }
 
 .glowing-btn:active {
-    transform: scale(0.95);
+    transform: scale(0.98);
 }
 
 #score-display {
@@ -130,23 +158,52 @@ canvas {
     top: 20px;
     right: 20px;
     font-size: 1.5rem;
-    color: var(--text-color);
-    text-shadow: 0 0 5px var(--text-color);
+    color: var(--highlight-yellow);
+    text-shadow: 0 0 5px rgba(254, 210, 16, 0.5);
+    background: rgba(0, 0, 0, 0.3);
+    padding: 5px 10px;
+    border-radius: 8px;
+    backdrop-filter: blur(4px);
 }
 
 .crash-text {
     color: var(--candle-red);
-    text-shadow: var(--neon-shadow) var(--candle-red);
+    text-shadow: 0 0 15px rgba(255, 51, 51, 0.5);
 }
 
 .quote {
     font-style: italic;
-    margin: 1rem 2rem 2rem;
+    margin: 1rem 0 2rem;
     text-align: center;
-    color: #8b949e;
+    color: #cbd5e1;
+    font-size: 0.9rem;
+}
+
+.stats {
+    width: 100%;
+    margin-bottom: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1rem 0;
 }
 
 .stats p {
+    display: flex;
+    justify-content: space-between;
     margin: 0.5rem 0;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
+}
+
+#game-over-screen.active {
+    animation: flash-red 0.5s ease;
+}
+
+@keyframes flash-red {
+    0% {
+        background-color: rgba(255, 0, 0, 0.3);
+    }
+
+    100% {
+        background-color: rgba(0, 53, 142, 0.85);
+    }
 }
