@@ -1,0 +1,152 @@
+:root {
+    --bg-color: #0d1117;
+    --bull-gold: #ffd700;
+    --candle-green: #00ff00;
+    --candle-red: #ff3333;
+    --text-color: #e6edf3;
+    --neon-shadow: 0 0 10px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Share Tech Mono', monospace;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    max-width: 600px;
+    /* Mobile-first constraint for desktop */
+    background: #161b22;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+#ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    /* Let taps pass through to canvas */
+}
+
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(13, 17, 23, 0.85);
+    backdrop-filter: blur(5px);
+    transition: opacity 0.3s ease;
+    pointer-events: auto;
+    /* Enable buttons */
+}
+
+.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.title {
+    font-size: 3rem;
+    color: var(--bull-gold);
+    text-shadow: var(--neon-shadow) var(--bull-gold);
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.subtitle {
+    font-size: 1.2rem;
+    color: var(--candle-green);
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.instructions {
+    margin-bottom: 3rem;
+    text-align: center;
+    line-height: 1.6;
+    color: #8b949e;
+}
+
+.glowing-btn {
+    background: transparent;
+    border: 2px solid var(--candle-green);
+    color: var(--candle-green);
+    padding: 1rem 2rem;
+    font-family: inherit;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: var(--neon-shadow) var(--candle-green);
+    transition: all 0.2s;
+    text-transform: uppercase;
+}
+
+.glowing-btn:hover {
+    background: var(--candle-green);
+    color: var(--bg-color);
+}
+
+.glowing-btn:active {
+    transform: scale(0.95);
+}
+
+#score-display {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 1.5rem;
+    color: var(--text-color);
+    text-shadow: 0 0 5px var(--text-color);
+}
+
+.crash-text {
+    color: var(--candle-red);
+    text-shadow: var(--neon-shadow) var(--candle-red);
+}
+
+.quote {
+    font-style: italic;
+    margin: 1rem 2rem 2rem;
+    text-align: center;
+    color: #8b949e;
+}
+
+.stats p {
+    margin: 0.5rem 0;
+    font-size: 1.2rem;
+}

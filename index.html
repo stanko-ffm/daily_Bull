@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Daily Bull</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="ui-layer">
+            <div id="score-display">Rendite: <span id="score-value">0.00</span>%</div>
+
+            <div id="start-screen" class="screen active">
+                <h1 class="title">THE DAILY BULL</h1>
+                <p class="subtitle">Ride the Volatility</p>
+                <div class="instructions">
+                    <p>TAP to BUY (Jump)</p>
+                    <p>Avoid RED CANDLES</p>
+                    <p>Collect BLUE CHIPS (Shields)</p>
+                    <p>Don't get LIQUIDATED</p>
+                </div>
+                <button id="start-btn" class="glowing-btn">MARKET OPEN</button>
+            </div>
+
+            <div id="game-over-screen" class="screen hidden">
+                <h1 class="title crash-text">MARKET CRASH</h1>
+                <p id="quote-text" class="quote">"The market can remain irrational longer than you can remain solvent."
+                </p>
+                <div class="stats">
+                    <p>Final Yield: <span id="final-score">0.00</span>%</p>
+                    <p>High Score: <span id="high-score">0.00</span>%</p>
+                </div>
+                <div class="button-container">
+                    <button id="restart-btn" class="glowing-btn">RE-INVEST</button>
+                    <button id="continue-btn" class="glowing-btn hidden"
+                        style="margin-top: 10px; border-color: #00ffff; color: #00ffff;">BAILOUT (Continue)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+
+</html>
