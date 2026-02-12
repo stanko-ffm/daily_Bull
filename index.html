@@ -14,16 +14,26 @@
         <canvas id="gameCanvas"></canvas>
 
         <div id="ui-layer">
-            <div id="score-display">Rendite: <span id="score-value">0.00</span>%</div>
+            <div id="score-display">Yield: <span id="score-value">0.00</span>%</div>
 
             <div id="start-screen" class="screen active">
                 <h1 class="title">THE DAILY BULL</h1>
                 <p class="subtitle">Ride the Volatility</p>
-                <div class="instructions">
+
+                <div id="leaderboard" class="leaderboard-panel">
+                    <h3>Wall of Fame (Top 3)</h3>
+                    <ul id="high-score-list">
+                        <!-- High scores injected here -->
+                        <li>1. --- : 0.00%</li>
+                        <li>2. --- : 0.00%</li>
+                        <li>3. --- : 0.00%</li>
+                    </ul>
+                </div>
+
+                <div class="instructions" style="margin-top: 1rem;">
                     <p>TAP to BUY (Jump)</p>
                     <p>Avoid RED CANDLES</p>
-                    <p>Collect BLUE CHIPS (Shields)</p>
-                    <p>Don't get LIQUIDATED</p>
+                    <p>Collect COINS & POWERUPS</p>
                 </div>
                 <button id="start-btn" class="glowing-btn">MARKET OPEN</button>
             </div>
@@ -32,10 +42,18 @@
                 <h1 class="title crash-text">MARKET CRASH</h1>
                 <p id="quote-text" class="quote">"The market can remain irrational longer than you can remain solvent."
                 </p>
+
                 <div class="stats">
                     <p>Final Yield: <span id="final-score">0.00</span>%</p>
-                    <p>High Score: <span id="high-score">0.00</span>%</p>
                 </div>
+
+                <!-- High Score Entry Form -->
+                <div id="new-record-form" class="hidden">
+                    <p class="new-record-msg">NEW ATH! ENTER NAME:</p>
+                    <input type="text" id="player-name" maxlength="10" placeholder="BULL_WHALE" autocomplete="off">
+                    <button id="submit-score-btn" class="glowing-btn small-btn">SAVE RECORD</button>
+                </div>
+
                 <div class="button-container">
                     <button id="restart-btn" class="glowing-btn">RE-INVEST</button>
                     <button id="continue-btn" class="glowing-btn hidden"

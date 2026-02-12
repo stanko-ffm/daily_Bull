@@ -5,7 +5,6 @@ class AudioManager {
         this.initialized = false;
     }
 
-    // Call this on first user interaction
     resume() {
         if (!this.initialized || this.ctx.state === 'suspended') {
             this.ctx.resume().then(() => {
@@ -15,7 +14,7 @@ class AudioManager {
     }
 
     playTone(freq, type, duration) {
-        if (this.ctx.state === 'suspended') return; // Can't play if suspended
+        if (this.ctx.state === 'suspended') return;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = type;
@@ -35,6 +34,11 @@ class AudioManager {
     playCollect() {
         this.playTone(800, 'square', 0.1);
         setTimeout(() => this.playTone(1200, 'square', 0.2), 100);
+    }
+
+    playCoin() {
+        this.playTone(1000, 'sine', 0.05);
+        setTimeout(() => this.playTone(1500, 'sine', 0.1), 50);
     }
 
     playMilestone() {
@@ -60,7 +64,6 @@ class AudioManager {
 
     playCrash() {
         if (this.ctx.state === 'suspended') {
-            // Try to resume even on crash?
             this.resume();
         }
         if (this.ctx.state === 'running') {
@@ -90,7 +93,7 @@ class Bull {
         this.gravity = 0.6;
         this.baseJumpStrength = -10;
         this.jumpStrength = this.baseJumpStrength;
-        this.color = '#ffd700'; // Gold
+        this.color = '#ffd700';
         this.rotation = 0;
 
         this.hasShield = false;
@@ -242,14 +245,12 @@ class Bull {
 }
 
 class Obstacle {
-    constructor(canvas, x) {
+    constructor(canvas, x, isMoving) {
         this.canvas = canvas;
         this.x = x;
         this.width = 40;
         this.gap = 220;
         this.speed = 3;
-        // User requested green for something, but typically candles are red/green. 
-        // Obstacles (bad) should be red.
         this.color = '#ff3333';
 
         const minHeight = 50;
@@ -257,7 +258,12 @@ class Obstacle {
         const minPos = minHeight;
         this.gapY = Math.random() * (maxPos - minPos) + minPos;
         this.passed = false;
-        this.hasSpawnedPowerUp = false; // Flag for spawn logic
+
+        this.isMoving = isMoving;
+        this.moveSpeed = 2;
+        this.initialGapY = this.gapY;
+        this.moveOffset = 0;
+        this.moveRange = 50;
     }
 
     draw(ctx) {
@@ -270,15 +276,26 @@ class Obstacle {
         ctx.shadowColor = '#ff3333';
         ctx.shadowBlur = 10;
 
-        ctx.fillRect(this.x, 0, this.width, this.gapY);
-        ctx.fillRect(this.x + this.width / 2 - 2, this.gapY - 20, 4, 20);
+        const currentGapY = this.gapY;
 
-        ctx.fillRect(this.x, this.gapY + this.gap, this.width, this.canvas.height - (this.gapY + this.gap));
-        ctx.fillRect(this.x + this.width / 2 - 2, this.gapY + this.gap, 4, 20);
+        ctx.fillRect(this.x, 0, this.width, currentGapY);
+        ctx.fillRect(this.x + this.width / 2 - 2, currentGapY - 20, 4, 20);
+
+        ctx.fillRect(this.x, currentGapY + this.gap, this.width, this.canvas.height - (currentGapY + this.gap));
+        ctx.fillRect(this.x + this.width / 2 - 2, currentGapY + this.gap, 4, 20);
     }
 
     update() {
         this.x -= this.speed;
+
+        if (this.isMoving) {
+            this.moveOffset += 0.05;
+            const movement = Math.sin(this.moveOffset) * this.moveRange;
+            let newGapY = this.initialGapY + movement;
+            if (newGapY < 50) newGapY = 50;
+            if (newGapY > this.canvas.height - 50 - this.gap) newGapY = this.canvas.height - 50 - this.gap;
+            this.gapY = newGapY;
+        }
     }
 
     collidesWith(bull) {
@@ -304,7 +321,6 @@ class Obstacle {
 class PowerUp {
     constructor(canvas, x, type) {
         this.canvas = canvas;
-        // Spawn after obstacle
         this.x = x;
         this.y = Math.random() * (canvas.height - 100) + 50;
         this.width = 30;
@@ -325,7 +341,7 @@ class PowerUp {
 
         // Colors
         if (this.type === 'shield') {
-            ctx.fillStyle = '#2d9d00'; // Green Shield (Requested green)
+            ctx.fillStyle = '#2d9d00';
             ctx.shadowColor = '#2d9d00';
             ctx.beginPath();
             ctx.arc(this.x + 15, this.y + 15 + offset, 15, 0, Math.PI * 2);
@@ -335,13 +351,12 @@ class PowerUp {
             ctx.beginPath();
             ctx.arc(this.x + 15, this.y + 15 + offset, 8, 0, Math.PI * 2);
             ctx.stroke();
-            // Label
             ctx.fillStyle = '#fff';
             ctx.font = 'bold 12px Arial';
             ctx.fillText('S', this.x + 11, this.y + 19 + offset);
 
         } else if (this.type === 'leverage') {
-            ctx.fillStyle = '#fed210'; // Yellow/Gold
+            ctx.fillStyle = '#fed210';
             ctx.shadowColor = '#fed210';
             ctx.beginPath();
             ctx.moveTo(this.x + 20, this.y + offset);
@@ -382,18 +397,61 @@ class PowerUp {
     }
 }
 
+class Coin {
+    constructor(canvas, x) {
+        this.canvas = canvas;
+        this.x = x;
+        this.y = Math.random() * (canvas.height - 100) + 50;
+        this.width = 20;
+        this.height = 20;
+        this.active = true;
+        this.oscillationIndex = Math.random() * 10;
+    }
+
+    draw(ctx) {
+        if (!this.active) return;
+        ctx.save();
+        this.oscillationIndex += 0.2;
+        const squish = Math.abs(Math.sin(this.oscillationIndex));
+
+        ctx.fillStyle = '#ffd700';
+        ctx.shadowColor = '#ffd700';
+        ctx.shadowBlur = 5;
+
+        ctx.beginPath();
+        ctx.ellipse(this.x + 10, this.y + 10, 10 * squish, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+    }
+
+    update(speed) {
+        this.x -= speed;
+    }
+
+    collidesWith(bull) {
+        if (!this.active) return false;
+        return (bull.x < this.x + this.width &&
+            bull.x + bull.width > this.x &&
+            bull.y < this.y + this.height &&
+            bull.y + bull.height > this.y);
+    }
+}
+
 class Particle {
     constructor(canvas) {
         this.canvas = canvas;
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
-        this.size = Math.random() * 2 + 1;
-        this.speedX = Math.random() * -1 - 0.5;
+        // Reverted to smaller size as requested
+        this.size = Math.random() * 1.5;
+        this.speedX = Math.random() * -0.5; // Slower, subtler
         this.alpha = Math.random() * 0.5 + 0.1;
     }
 
     update(gameSpeed) {
-        this.x += this.speedX - (gameSpeed * 0.2);
+        // Less dramatic parallax
+        this.x += this.speedX - (gameSpeed * 0.1);
         if (this.x < 0) {
             this.x = this.canvas.width;
             this.y = Math.random() * this.canvas.height;
@@ -401,8 +459,38 @@ class Particle {
     }
 
     draw(ctx) {
-        ctx.fillStyle = `rgba(45, 157, 0, ${this.alpha})`; // Green particles 
-        ctx.fillRect(this.x, this.y, this.size, this.size);
+        ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+// High Score Manager
+class HighScoreManager {
+    constructor() {
+        this.scores = JSON.parse(localStorage.getItem('dailyBullHighScores')) || [
+            { name: 'Satoshi', score: 12.50 },
+            { name: 'HODLer', score: 8.00 },
+            { name: 'PaperHand', score: 3.50 }
+        ];
+    }
+
+    getScores() {
+        return this.scores.sort((a, b) => b.score - a.score).slice(0, 3);
+    }
+
+    isHighScore(score) {
+        const tops = this.getScores();
+        if (tops.length < 3) return true;
+        return score > tops[tops.length - 1].score;
+    }
+
+    addScore(name, score) {
+        this.scores.push({ name: name || 'Anon', score: parseFloat(score) });
+        this.scores.sort((a, b) => b.score - a.score);
+        this.scores = this.scores.slice(0, 3);
+        localStorage.setItem('dailyBullHighScores', JSON.stringify(this.scores));
     }
 }
 
@@ -411,16 +499,18 @@ class Game {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
         this.audio = new AudioManager();
+        this.highScoreManager = new HighScoreManager();
         this.resize();
 
         this.bull = new Bull(this.canvas);
         this.obstacles = [];
         this.powerUps = [];
+        this.coins = [];
         this.particles = [];
-        for (let i = 0; i < 50; i++) this.particles.push(new Particle(this.canvas));
+        for (let i = 0; i < 100; i++) this.particles.push(new Particle(this.canvas));
 
         this.score = 0;
-        this.obstacleCounter = 0; // For powerup spawning
+        this.obstacleCounter = 0;
         this.yieldRate = 0.01;
         this.baseSpeed = 3;
         this.gameSpeed = this.baseSpeed;
@@ -433,16 +523,18 @@ class Game {
         this.animationId = null;
         this.hasContinue = false;
 
+        // Elements
         this.scoreElement = document.getElementById('score-value');
         this.finalScoreElement = document.getElementById('final-score');
-        this.highScoreElement = document.getElementById('high-score');
         this.startScreen = document.getElementById('start-screen');
         this.gameOverScreen = document.getElementById('game-over-screen');
         this.quoteText = document.getElementById('quote-text');
         this.continueBtn = document.getElementById('continue-btn');
 
-        this.highScore = localStorage.getItem('dailyBullHighScore') || 0;
-        if (this.highScoreElement) this.highScoreElement.innerText = parseFloat(this.highScore).toFixed(2);
+        this.highScoreList = document.getElementById('high-score-list');
+        this.newRecordForm = document.getElementById('new-record-form');
+        this.playerNameInput = document.getElementById('player-name');
+        this.submitScoreBtn = document.getElementById('submit-score-btn');
 
         this.quotes = [
             "The market can remain irrational longer than you can remain solvent.",
@@ -453,11 +545,14 @@ class Game {
             "Pigs get slaughtered."
         ];
 
+        this.updateLeaderboardUI();
+
         window.addEventListener('resize', () => this.resize());
 
         this.handleInput = (e) => {
-            // CRITICAL: Resume audio on first interaction!
             this.audio.resume();
+
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return; // Don't jump if typing
 
             if (e.type === 'keydown' && e.code !== 'Space') return;
             if (e.type === 'touchstart') e.preventDefault();
@@ -473,7 +568,7 @@ class Game {
 
         const startBtn = document.getElementById('start-btn');
         if (startBtn) startBtn.addEventListener('click', (e) => {
-            this.audio.resume(); // Ensure resume on start click too
+            this.audio.resume();
             this.start();
         });
 
@@ -486,6 +581,27 @@ class Game {
         if (this.continueBtn) this.continueBtn.addEventListener('click', () => {
             this.audio.resume();
             this.continueGame();
+        });
+
+        if (this.submitScoreBtn) this.submitScoreBtn.addEventListener('click', () => {
+            const name = this.playerNameInput.value.toUpperCase().substring(0, 10);
+            this.highScoreManager.addScore(name, this.score);
+            this.updateLeaderboardUI();
+            // Return to menu
+            this.gameOverScreen.classList.add('hidden');
+            this.gameOverScreen.classList.remove('active');
+            this.startScreen.classList.remove('hidden');
+            this.startScreen.classList.add('active');
+        });
+    }
+
+    updateLeaderboardUI() {
+        this.highScoreList.innerHTML = '';
+        const scores = this.highScoreManager.getScores();
+        scores.forEach((entry, index) => {
+            const li = document.createElement('li');
+            li.innerText = `${index + 1}. ${entry.name} : ${entry.score.toFixed(2)}%`;
+            this.highScoreList.appendChild(li);
         });
     }
 
@@ -503,6 +619,7 @@ class Game {
         this.gameSpeed = this.baseSpeed;
         this.obstacles = [];
         this.powerUps = [];
+        this.coins = [];
         this.bull = new Bull(this.canvas);
         this.hasContinue = true;
 
@@ -548,18 +665,25 @@ class Game {
         cancelAnimationFrame(this.animationId);
         this.audio.playCrash();
 
-        if (this.score > this.highScore) {
-            this.highScore = this.score;
-            localStorage.setItem('dailyBullHighScore', this.highScore);
-            if (this.highScoreElement) this.highScoreElement.innerText = this.highScore.toFixed(2);
-        }
-
         if (this.finalScoreElement) this.finalScoreElement.innerText = this.score.toFixed(2);
 
         const quote = this.quotes[Math.floor(Math.random() * this.quotes.length)];
         if (this.quoteText) this.quoteText.innerText = `"${quote}"`;
 
-        if (this.score > 50 && this.hasContinue) {
+        // Check High Score
+        if (this.highScoreManager.isHighScore(this.score)) {
+            this.newRecordForm.classList.remove('hidden');
+            this.playerNameInput.value = '';
+            // Hide standard buttons while entering name
+            document.querySelector('.button-container').style.display = 'none';
+        } else {
+            this.newRecordForm.classList.add('hidden');
+            document.querySelector('.button-container').style.display = 'flex';
+        }
+
+        // Only show Continue if NOT a high score entry flow (simplify UI)
+        // OR show it anyway? Let's say if you bail out you can still get high score later.
+        if (this.score > 50 && this.hasContinue && !this.highScoreManager.isHighScore(this.score)) {
             this.continueBtn.classList.remove('hidden');
             this.continueBtn.style.display = 'block';
         } else {
@@ -573,13 +697,17 @@ class Game {
 
     spawnObstacle() {
         const x = this.canvas.width;
-        this.obstacles.push(new Obstacle(this.canvas, x));
         this.obstacleCounter++;
+        const isMoving = (this.obstacleCounter % 4 === 0);
+        this.obstacles.push(new Obstacle(this.canvas, x, isMoving));
 
-        // Power-up check: Every 3-4 obstacles (Random 3 or 4)
         if (this.obstacleCounter % (3 + Math.floor(Math.random() * 2)) === 0) {
-            // Schedule spawn slightly after this obstacle
             setTimeout(() => this.spawnPowerUp(x + 150), 100);
+        }
+
+        if (Math.random() > 0.3) {
+            this.spawnCoin(x + 100);
+            if (Math.random() > 0.5) setTimeout(() => this.spawnCoin(x + 150), 200);
         }
     }
 
@@ -589,6 +717,10 @@ class Game {
         if (rand > 0.5) type = 'leverage';
         if (rand > 0.85) type = 'rocket';
         this.powerUps.push(new PowerUp(this.canvas, x, type));
+    }
+
+    spawnCoin(x) {
+        this.coins.push(new Coin(this.canvas, x));
     }
 
     loop(timestamp) {
@@ -616,13 +748,13 @@ class Game {
 
             this.ctx.fillStyle = 'rgba(254, 210, 16, 0.1)';
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-            this.ctx.fillStyle = '#fed210'; // Requested Yellow
+            this.ctx.fillStyle = '#fed210';
             this.ctx.textAlign = 'center';
-            this.ctx.font = 'bold 40px Share Tech Mono'; // Increased Size
+            this.ctx.font = 'bold 40px Share Tech Mono';
             this.ctx.shadowColor = '#000';
             this.ctx.shadowBlur = 10;
             this.ctx.fillText("⚠ INFLATION ⚠", this.canvas.width / 2, 100);
-            this.ctx.shadowBlur = 0; // Reset
+            this.ctx.shadowBlur = 0;
 
             if (this.inflationTimer <= 0) {
                 this.isInflationActive = false;
@@ -653,7 +785,7 @@ class Game {
 
         // Milestone
         if (Math.floor(this.score) > 0 && Math.floor(this.score) % 100 === 0 && (this.score - Math.floor(this.score) < currentYieldRate)) {
-            this.ctx.fillStyle = '#2d9d00'; // Green
+            this.ctx.fillStyle = '#2d9d00';
             this.ctx.font = 'bold 36px Share Tech Mono';
             this.ctx.textAlign = 'center';
             this.ctx.fillText("ATH BREAKOUT!", this.canvas.width / 2, 150);
@@ -672,10 +804,21 @@ class Game {
             }
         }
 
-        // Powerups updated spawning logic is inside spawnObstacle now, 
-        // to ensure frequent spawns relative to obstacles.
-        // We can keep the random timer as a fallback? No, let's rely on obstacles for consistency.
+        // --- COINS UPDATE ---
+        for (let i = this.coins.length - 1; i >= 0; i--) {
+            let c = this.coins[i];
+            c.update(this.gameSpeed);
+            c.draw(this.ctx);
+            if (c.collidesWith(this.bull)) {
+                this.audio.playCoin();
+                this.score += 2.0;
+                this.coins.splice(i, 1);
+                continue;
+            }
+            if (c.x < -50) this.coins.splice(i, 1);
+        }
 
+        // --- POWERUPS UPDATE ---
         for (let i = this.powerUps.length - 1; i >= 0; i--) {
             let p = this.powerUps[i];
             p.update(this.gameSpeed);
@@ -694,6 +837,7 @@ class Game {
             if (p.x + p.width < 0) this.powerUps.splice(i, 1);
         }
 
+        // --- OBSTACLES UPDATE ---
         for (let i = this.obstacles.length - 1; i >= 0; i--) {
             let obs = this.obstacles[i];
             obs.speed = this.gameSpeed;
